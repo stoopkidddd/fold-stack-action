@@ -5,6 +5,7 @@
 import { Octokit } from '@octokit/rest'
 import core from '@actions/core'
 import { execSync } from 'child_process'
+import { createActionAuth } from '@octokit/auth-action'
 
 async function findOpenPRs(octokit, commitSHA) {
   const { data: issues } = await octokit.search.issuesAndPullRequests({
@@ -21,8 +22,9 @@ async function getTargetBranch(octokit, prURL) {
 
 export async function main() {
   try {
-    const token = core.getInput('repo-token', { required: true })
-    const octokit = new Octokit({ auth: token })
+    const auth = createActionAuth()
+    const authentication = await auth()
+    const octokit = new Octokit({ auth: authentication.token })
 
     const commitSHA = process.env.GITHUB_SHA
 
