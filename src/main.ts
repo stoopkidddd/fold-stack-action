@@ -35,7 +35,7 @@ export async function main() {
 
     const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0]
     // get current PR
-    const currentPR = octokit.pulls.get({
+    const currentPR = await octokit.pulls.get({
       pull_number
     })
 

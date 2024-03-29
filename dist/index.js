@@ -28893,7 +28893,7 @@ async function main() {
         //context.payload.pull_request.number
         const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0];
         // get current PR
-        const currentPR = octokit.pulls.get({
+        const currentPR = await octokit.pulls.get({
             pull_number
         });
         console.log('currentPR', currentPR);
