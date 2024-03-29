@@ -1,26 +1,54 @@
-import * as core from '@actions/core'
-import { wait } from './wait'
+import { Octokit } from "@octokit/rest";
+import core from "@actions/core";
+import { execSync } from "child_process";
 
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
-export async function run(): Promise<void> {
+async function findOpenPRs(octokit, commitSHA) {
+  const { data: issues } = await octokit.search.issuesAndPullRequests({
+    q: `is:open is:pr ${commitSHA} in:body`,
+  });
+
+  return issues.items.filter((issue) => issue.pull_request);
+}
+
+async function getTargetBranch(octokit, prURL) {
+  const pr = await octokit.request(prURL);
+  return pr.data.base.ref;
+}
+
+async function main() {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const token = core.getInput("repo-token", { required: true });
+    const octokit = new Octokit({ auth: token });
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const commitSHA = process.env.GITHUB_SHA;
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const openPRs = await findOpenPRs(octokit, commitSHA);
+    if (openPRs.length === 0) {
+      core.info("No open PRs found.");
+      return;
+    }
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    const pr = openPRs[0];
+    const targetBranch = await getTargetBranch(octokit, pr.pull_request.url);
+
+    if (targetBranch === "develop") {
+      core.info("Final PR found targeting 'develop'. Rebase and merge...");
+      execSync(`git fetch origin ${pr.head.ref}`);
+      execSync(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`);
+      execSync(`git rebase origin/develop`);
+      execSync(`git push origin pr-${pr.number}-branch:refs/heads/develop`);
+      execSync(`gh pr merge --squash --delete-branch --auto -m "Rebased and merged PR into develop" ${pr.number}`);
+    } else {
+      core.info("Target branch is not 'develop'. Merging...");
+      execSync(`git fetch origin ${pr.head.ref}`);
+      execSync(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`);
+      execSync(`git merge --no-ff --no-edit ${commitSHA}`);
+      execSync(`git push origin pr-${pr.number}-branch:${targetBranch}`);
+    }
   } catch (error) {
-    // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message)
+    core.setFailed(error.message);
   }
 }
+
+main();
+
