@@ -28,7 +28,10 @@ export async function main() {
     const authentication = await auth()
 
     console.log('we got past auth')
-    const octokit = new Octokit({ auth: authentication.token })
+    const octokit = new Octokit({
+      auth: authentication.token,
+      baseUrl: process.env.GITHUB_API_URL
+    })
 
     console.log('env dump', JSON.stringify(process.env))
     //context.payload.pull_request.number
