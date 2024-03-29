@@ -1,18 +1,19 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import { Octokit } from '@octokit/rest'
 import core from '@actions/core'
 import { execSync } from 'child_process'
 
-// @ts-ignore all
 async function findOpenPRs(octokit, commitSHA) {
   const { data: issues } = await octokit.search.issuesAndPullRequests({
     q: `is:open is:pr ${commitSHA} in:body`
   })
 
-  // @ts-ignore all
   return issues.items.filter(issue => issue.pull_request)
 }
 
-// @ts-ignore all
 async function getTargetBranch(octokit, prURL) {
   const pr = await octokit.request(prURL)
   return pr.data.base.ref
@@ -51,7 +52,6 @@ export async function main() {
       execSync(`git push origin pr-${pr.number}-branch:${targetBranch}`)
     }
   } catch (error) {
-    // @ts-ignore all
     core.setFailed(error.message)
   }
 }
