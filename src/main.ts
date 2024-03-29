@@ -3,7 +3,7 @@
 // @ts-nocheck
 
 import { Octokit } from '@octokit/rest'
-import core from '@actions/core'
+import * as core from '@actions/core'
 import { execSync } from 'child_process'
 import { createActionAuth } from '@octokit/auth-action'
 
