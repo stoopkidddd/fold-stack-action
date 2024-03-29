@@ -35,11 +35,12 @@ export async function main() {
 
     const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0]
     // get current PR
-    // const currentPR = await octokit.pulls.get({
-    //   pull_number
-    // })
-
     console.log('pull_number', pull_number)
+    const currentPR = await octokit.pulls.get({
+      pull_number
+    })
+
+    console.log('currentPR', currentPR)
 
     const commitSHA = process.env.GITHUB_SHA
 
