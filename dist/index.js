@@ -28889,6 +28889,12 @@ async function main() {
         const authentication = await auth();
         console.log('we got past auth');
         const octokit = new rest_1.Octokit({ auth: authentication.token });
+        console.log('env dump', JSON.stringify(process.env));
+        //context.payload.pull_request.number
+        // get current PR
+        const currentPR = octokit.pulls.get({
+            pull_number: process.env.event.number
+        });
         const commitSHA = process.env.GITHUB_SHA;
         const openPRs = await findOpenPRs(octokit, commitSHA);
         if (openPRs.length === 0) {
