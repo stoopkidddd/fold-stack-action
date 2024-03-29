@@ -26,6 +26,8 @@ export async function main() {
   try {
     const auth = createActionAuth()
     const authentication = await auth()
+
+    console.log('we got past auth')
     const octokit = new Octokit({ auth: authentication.token })
 
     const commitSHA = process.env.GITHUB_SHA

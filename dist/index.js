@@ -28887,6 +28887,7 @@ async function main() {
     try {
         const auth = (0, auth_action_1.createActionAuth)();
         const authentication = await auth();
+        console.log('we got past auth');
         const octokit = new rest_1.Octokit({ auth: authentication.token });
         const commitSHA = process.env.GITHUB_SHA;
         const openPRs = await findOpenPRs(octokit, commitSHA);
