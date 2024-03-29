@@ -28873,7 +28873,7 @@ const child_process_1 = __nccwpck_require__(2081);
 const auth_action_1 = __nccwpck_require__(9205);
 async function findOpenPRs(octokit, commitSHA) {
     const { data: issues } = await octokit.search.issuesAndPullRequests({
-        q: `is:open is:pr ${commitSHA} in:body`
+        q: `is:open is:pr ${commitSHA}`
     });
     return issues.items.filter(issue => issue.pull_request);
 }
@@ -28891,10 +28891,12 @@ async function main() {
         const octokit = new rest_1.Octokit({ auth: authentication.token });
         console.log('env dump', JSON.stringify(process.env));
         //context.payload.pull_request.number
+        const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0];
         // get current PR
         const currentPR = octokit.pulls.get({
-            pull_number: process.env.event.number
+            pull_number
         });
+        console.log('currentPR', currentPR);
         const commitSHA = process.env.GITHUB_SHA;
         const openPRs = await findOpenPRs(octokit, commitSHA);
         if (openPRs.length === 0) {
@@ -28903,6 +28905,7 @@ async function main() {
         }
         const pr = openPRs[0];
         const targetBranch = await getTargetBranch(octokit, pr.pull_request.url);
+        console.log('targetBranch', targetBranch);
         if (targetBranch === 'develop') {
             core.info("Final PR found targeting 'develop'. Rebase and merge...");
             (0, child_process_1.execSync)(`git fetch origin ${pr.head.ref}`);

@@ -9,7 +9,7 @@ import { createActionAuth } from '../node_modules/@octokit/auth-action'
 
 async function findOpenPRs(octokit, commitSHA) {
   const { data: issues } = await octokit.search.issuesAndPullRequests({
-    q: `is:open is:pr ${commitSHA} in:body`
+    q: `is:open is:pr ${commitSHA}`
   })
 
   return issues.items.filter(issue => issue.pull_request)
@@ -33,10 +33,13 @@ export async function main() {
     console.log('env dump', JSON.stringify(process.env))
     //context.payload.pull_request.number
 
+    const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0]
     // get current PR
     const currentPR = octokit.pulls.get({
-      pull_number: process.env.event.number
+      pull_number
     })
+
+    console.log('currentPR', currentPR)
 
     const commitSHA = process.env.GITHUB_SHA
 
@@ -48,6 +51,8 @@ export async function main() {
 
     const pr = openPRs[0]
     const targetBranch = await getTargetBranch(octokit, pr.pull_request.url)
+
+    console.log('targetBranch', targetBranch)
 
     if (targetBranch === 'develop') {
       core.info("Final PR found targeting 'develop'. Rebase and merge...")
