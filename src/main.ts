@@ -5,7 +5,7 @@
 import { Octokit } from '@octokit/rest'
 import * as core from '@actions/core'
 import { execSync } from 'child_process'
-import { createActionAuth } from '../node_modules/@octokit/auth-action'
+// import { createActionAuth } from '../node_modules/@octokit/auth-action'
 
 async function findOpenPRs(octokit, commitSHA) {
   const { data: issues } = await octokit.search.issuesAndPullRequests({

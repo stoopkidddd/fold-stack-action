@@ -28870,7 +28870,7 @@ exports.main = void 0;
 const rest_1 = __nccwpck_require__(5375);
 const core = __importStar(__nccwpck_require__(2186));
 const child_process_1 = __nccwpck_require__(2081);
-const auth_action_1 = __nccwpck_require__(9205);
+// import { createActionAuth } from '../node_modules/@octokit/auth-action'
 async function findOpenPRs(octokit, commitSHA) {
     const { data: issues } = await octokit.search.issuesAndPullRequests({
         q: `is:open is:pr ${commitSHA}`
@@ -28885,12 +28885,12 @@ async function main() {
     console.log('are we in main?');
     core.info('did we make it to main, core');
     try {
-        const auth = (0, auth_action_1.createActionAuth)();
-        const authentication = await auth();
+        // const auth = createActionAuth()
+        // const authentication = await auth()
         console.log('we got past auth');
         const octokit = new rest_1.Octokit({
-            auth: authentication.token,
-            baseUrl: process.env.GITHUB_API_URL
+            auth: process.env.PAT_TOKEN
+            // baseUrl: process.env.GITHUB_API_URL
         });
         console.log('env dump', JSON.stringify(process.env));
         //context.payload.pull_request.number
@@ -30790,101 +30790,6 @@ function parseParams (str) {
 module.exports = parseParams
 
 
-/***/ }),
-
-/***/ 9205:
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
-
-// EXPORTS
-__nccwpck_require__.d(__webpack_exports__, {
-  "createActionAuth": () => (/* binding */ createActionAuth)
-});
-
-;// CONCATENATED MODULE: ./node_modules/@octokit/auth-action/node_modules/@octokit/auth-token/dist-bundle/index.js
-// pkg/dist-src/auth.js
-var REGEX_IS_INSTALLATION_LEGACY = /^v1\./;
-var REGEX_IS_INSTALLATION = /^ghs_/;
-var REGEX_IS_USER_TO_SERVER = /^ghu_/;
-async function auth(token) {
-  const isApp = token.split(/\./).length === 3;
-  const isInstallation = REGEX_IS_INSTALLATION_LEGACY.test(token) || REGEX_IS_INSTALLATION.test(token);
-  const isUserToServer = REGEX_IS_USER_TO_SERVER.test(token);
-  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
-  return {
-    type: "token",
-    token,
-    tokenType
-  };
-}
-
-// pkg/dist-src/with-authorization-prefix.js
-function withAuthorizationPrefix(token) {
-  if (token.split(/\./).length === 3) {
-    return `bearer ${token}`;
-  }
-  return `token ${token}`;
-}
-
-// pkg/dist-src/hook.js
-async function hook(token, request, route, parameters) {
-  const endpoint = request.endpoint.merge(
-    route,
-    parameters
-  );
-  endpoint.headers.authorization = withAuthorizationPrefix(token);
-  return request(endpoint);
-}
-
-// pkg/dist-src/index.js
-var createTokenAuth = function createTokenAuth2(token) {
-  if (!token) {
-    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
-  }
-  if (typeof token !== "string") {
-    throw new Error(
-      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
-    );
-  }
-  token = token.replace(/^(token|bearer) +/i, "");
-  return Object.assign(auth.bind(null, token), {
-    hook: hook.bind(null, token)
-  });
-};
-
-
-;// CONCATENATED MODULE: ./node_modules/@octokit/auth-action/dist-src/index.js
-
-const createActionAuth = function createActionAuth2() {
-  if (!process.env.GITHUB_ACTION) {
-    throw new Error(
-      "[@octokit/auth-action] `GITHUB_ACTION` environment variable is not set. @octokit/auth-action is meant to be used in GitHub Actions only."
-    );
-  }
-  const definitions = [
-    process.env.GITHUB_TOKEN,
-    process.env.INPUT_GITHUB_TOKEN,
-    process.env.INPUT_TOKEN
-  ].filter(Boolean);
-  if (definitions.length === 0) {
-    throw new Error(
-      "[@octokit/auth-action] `GITHUB_TOKEN` variable is not set. It must be set on either `env:` or `with:`. See https://github.com/octokit/auth-action.js#createactionauth"
-    );
-  }
-  if (definitions.length > 1) {
-    throw new Error(
-      "[@octokit/auth-action] The token variable is specified more than once. Use either `with.token`, `with.GITHUB_TOKEN`, or `env.GITHUB_TOKEN`. See https://github.com/octokit/auth-action.js#createactionauth"
-    );
-  }
-  const token = definitions.pop();
-  return createTokenAuth(token);
-};
-
-
-
 /***/ })
 
 /******/ 	});
@@ -30920,34 +30825,6 @@ const createActionAuth = function createActionAuth2() {
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
