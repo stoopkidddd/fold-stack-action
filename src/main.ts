@@ -24,13 +24,13 @@ export async function main() {
   console.log('are we in main?')
   core.info('did we make it to main, core')
   try {
-    const auth = createActionAuth()
-    const authentication = await auth()
+    // const auth = createActionAuth()
+    // const authentication = await auth()
 
     console.log('we got past auth')
     const octokit = new Octokit({
-      auth: authentication.token,
-      baseUrl: process.env.GITHUB_API_URL
+      auth: process.env.PAT_TOKEN
+      // baseUrl: process.env.GITHUB_API_URL
     })
 
     console.log('env dump', JSON.stringify(process.env))
