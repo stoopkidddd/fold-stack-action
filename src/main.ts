@@ -21,6 +21,8 @@ async function getTargetBranch(octokit, prURL) {
 }
 
 export async function main() {
+  console.log('are we in main?')
+  core.info('did we make it to main, core')
   try {
     const auth = createActionAuth()
     const authentication = await auth()
