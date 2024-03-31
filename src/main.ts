@@ -37,7 +37,11 @@ export async function main() {
     // get current PR
     console.log('pull_number', pull_number)
 
-    const currentPR = await octokit.rest.pulls({
+    const ownerAndRepo = process.env.GITHUB_REPOSITORY?.split('/');
+
+    const currentPR = await octokit.rest.pulls.get({
+      owner: ownerAndRepo[0],
+      repo: ownerAndRepo[1],
       pull_number
     })
 
