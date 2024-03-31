@@ -2,7 +2,8 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
-import { Octokit } from 'octokit'
+import { Octokit } from '@octokit/core'
+import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
 import * as core from '@actions/core'
 import { execSync } from 'child_process'
 // import { createActionAuth } from '../node_modules/@octokit/auth-action'
@@ -27,8 +28,10 @@ export async function main() {
     // const auth = createActionAuth()
     // const authentication = await auth()
 
+    const MyOctokit = Octokit.plugin(restEndpointMethods)
+
     console.log('we got past auth')
-    const octokit = new Octokit({
+    const octokit = new MyOctokit({
       auth: process.env.PAT_TOKEN
       // baseUrl: process.env.GITHUB_API_URL
     })
@@ -37,7 +40,7 @@ export async function main() {
     // get current PR
     console.log('pull_number', pull_number)
 
-    const ownerAndRepo = process.env.GITHUB_REPOSITORY?.split('/');
+    const ownerAndRepo = process.env.GITHUB_REPOSITORY?.split('/')
 
     const currentPR = await octokit.rest.pulls.get({
       owner: ownerAndRepo[0],
