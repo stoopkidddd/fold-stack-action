@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
-import { Octokit } from '@octokit/rest'
+import { Octokit } from 'octokit'
 import * as core from '@actions/core'
 import { execSync } from 'child_process'
 // import { createActionAuth } from '../node_modules/@octokit/auth-action'
@@ -33,19 +33,11 @@ export async function main() {
       // baseUrl: process.env.GITHUB_API_URL
     })
 
-    const searchResult = octokit.search({
-      pr: 3
-    })
-
-    console.log('searchResult', searchResult)
-
-    console.log('env dump', JSON.stringify(process.env))
-    //context.payload.pull_request.number
-
     const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0]
     // get current PR
     console.log('pull_number', pull_number)
-    const currentPR = await octokit.pulls.get({
+
+    const currentPR = await octokit.rest.pulls({
       pull_number
     })
 
