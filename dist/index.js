@@ -28892,6 +28892,10 @@ async function main() {
             auth: process.env.PAT_TOKEN
             // baseUrl: process.env.GITHUB_API_URL
         });
+        const searchResult = octokit.search({
+            pr: 3
+        });
+        console.log('searchResult', searchResult);
         console.log('env dump', JSON.stringify(process.env));
         //context.payload.pull_request.number
         const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0];

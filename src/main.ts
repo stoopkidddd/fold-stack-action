@@ -33,6 +33,12 @@ export async function main() {
       // baseUrl: process.env.GITHUB_API_URL
     })
 
+    const searchResult = octokit.search({
+      pr: 3
+    })
+
+    console.log('searchResult', searchResult)
+
     console.log('env dump', JSON.stringify(process.env))
     //context.payload.pull_request.number
 
