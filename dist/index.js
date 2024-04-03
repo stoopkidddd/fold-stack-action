@@ -30467,7 +30467,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 // }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         try {
             // const auth = createActionAuth()
             // const authentication = await auth()
@@ -30503,8 +30503,9 @@ function main() {
                 // head: nextPR.data.base.ref
             });
             // TODO: can we find trunk branch from envars?
-            while (nextPR.data.base.ref !== process.env.TRUNK_BRANCH) {
+            while (((_e = (_d = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _d === void 0 ? void 0 : _d.base) === null || _e === void 0 ? void 0 : _e.ref) !== process.env.TRUNK_BRANCH) {
                 const nextHead = nextPR.data.base.ref;
+                console.log('attempting nextHead', nextHead);
                 const nextHeadPRs = allOpenPRs.data.filter(pr => pr.base.ref === nextHead);
                 console.log('prList', {
                     nextHead: nextPR.data.base.ref,

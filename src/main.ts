@@ -69,8 +69,10 @@ export async function main() {
     })
 
     // TODO: can we find trunk branch from envars?
-    while (nextPR.data.base.ref !== process.env.TRUNK_BRANCH) {
+    while (nextPR?.data?.base?.ref !== process.env.TRUNK_BRANCH) {
       const nextHead = nextPR.data.base.ref
+
+      console.log('attempting nextHead', nextHead)
 
       const nextHeadPRs = allOpenPRs.data.filter(pr => pr.base.ref === nextHead)
       console.log('prList', {
