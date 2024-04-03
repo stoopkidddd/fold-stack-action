@@ -30506,10 +30506,11 @@ function main() {
             while (((_e = (_d = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _d === void 0 ? void 0 : _d.base) === null || _e === void 0 ? void 0 : _e.ref) !== process.env.TRUNK_BRANCH) {
                 const nextHead = (_g = (_f = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _f === void 0 ? void 0 : _f.base) === null || _g === void 0 ? void 0 : _g.ref;
                 console.log('attempting nextHead', nextHead);
-                const nextHeadPRs = allOpenPRs.data.filter(pr => pr.base.ref === nextHead);
+                const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead);
                 console.log('prList', {
                     nextHead: nextPR.data.base.ref,
-                    nextHeadPRs
+                    nextHeadPRs,
+                    allOpenPRs
                 });
                 if (nextHeadPRs.length !== 1) {
                     throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base.ref} or we found more than one`);

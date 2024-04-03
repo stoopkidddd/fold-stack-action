@@ -74,10 +74,11 @@ export async function main() {
 
       console.log('attempting nextHead', nextHead)
 
-      const nextHeadPRs = allOpenPRs.data.filter(pr => pr.base.ref === nextHead)
+      const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead)
       console.log('prList', {
         nextHead: nextPR.data.base.ref,
-        nextHeadPRs
+        nextHeadPRs,
+        allOpenPRs
       })
 
       if (nextHeadPRs.length !== 1) {
