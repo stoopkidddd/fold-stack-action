@@ -46,7 +46,7 @@ async function getCombinedSuccess(
     repo,
     pull_number
   })
-  console.log('getCombinedSuccess', result)
+  console.log('getCombinedSuccess', result.repository.pullRequest.commits.nodes)
   const [{ commit: lastCommit }] = result.repository.pullRequest.commits.nodes
   return lastCommit.statusCheckRollup.state === 'SUCCESS'
 }
