@@ -30490,7 +30490,7 @@ function main() {
                 repo,
                 pull_number
             });
-            console.log('currentPR', currentPR.data);
+            // console.log('currentPR', currentPR.data)
             const descendantPRs = [];
             let nextPR = currentPR;
             // TODO: can we find trunk branch from envars?
@@ -30498,11 +30498,11 @@ function main() {
                 const prList = yield octokit.rest.pulls.list({
                     owner,
                     repo,
-                    base: nextPR.data.base.ref
+                    base: nextPR.data.head.ref
                 });
                 console.log('prList', {
-                    base: nextPR.data.base.ref,
-                    prListLength: prList.length,
+                    head: nextPR.data.head.ref,
+                    prListLength: prList.data.length,
                     prList: prList.data
                 });
                 if (prList.data.length !== 1) {

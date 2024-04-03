@@ -50,7 +50,7 @@ export async function main() {
       pull_number
     })
 
-    console.log('currentPR', currentPR.data)
+    // console.log('currentPR', currentPR.data)
 
     const descendantPRs = []
     let nextPR = currentPR
@@ -60,12 +60,12 @@ export async function main() {
       const prList = await octokit.rest.pulls.list({
         owner,
         repo,
-        base: nextPR.data.base.ref
+        base: nextPR.data.head.ref
       })
 
       console.log('prList', {
-        base: nextPR.data.base.ref,
-        prListLength: prList.length,
+        head: nextPR.data.head.ref,
+        prListLength: prList.data.length,
         prList: prList.data
       })
 
