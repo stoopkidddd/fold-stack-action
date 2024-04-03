@@ -30467,7 +30467,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 // }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f, _g;
         try {
             // const auth = createActionAuth()
             // const authentication = await auth()
@@ -30504,7 +30504,7 @@ function main() {
             });
             // TODO: can we find trunk branch from envars?
             while (((_e = (_d = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _d === void 0 ? void 0 : _d.base) === null || _e === void 0 ? void 0 : _e.ref) !== process.env.TRUNK_BRANCH) {
-                const nextHead = nextPR.data.base.ref;
+                const nextHead = (_g = (_f = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _f === void 0 ? void 0 : _f.base) === null || _g === void 0 ? void 0 : _g.ref;
                 console.log('attempting nextHead', nextHead);
                 const nextHeadPRs = allOpenPRs.data.filter(pr => pr.base.ref === nextHead);
                 console.log('prList', {
@@ -30526,6 +30526,11 @@ function main() {
                 }
                 descendantPRs.push(pr);
                 nextPR = pr;
+                console.log('idk we are desperate', {
+                    base: nextPR.data.base.ref,
+                    descendantPRs,
+                    nextPR
+                });
             }
             console.log('somehow we got out?', descendantPRs);
             // const commitSHA = process.env.GITHUB_SHA
