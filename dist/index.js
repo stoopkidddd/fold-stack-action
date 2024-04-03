@@ -30494,22 +30494,24 @@ function main() {
             const descendantPRs = [];
             let nextPR = currentPR;
             console.log('envvars', process.env);
+            const allOpenPRs = yield octokit.rest.pulls.list({
+                owner,
+                repo,
+                state: 'open'
+                // head: nextPR.data.base.ref
+            });
             // TODO: can we find trunk branch from envars?
             while (nextPR.data.base.ref !== 'develop') {
-                const prList = yield octokit.rest.pulls.list({
-                    owner,
-                    repo,
-                    head: nextPR.data.base.ref
-                });
+                const nextHead = nextPR.data.base.ref;
+                const nextHeadPRs = allOpenPRs.data.filter(pr => pr.base.ref === nextHead);
                 console.log('prList', {
                     nextHead: nextPR.data.base.ref,
-                    prListLength: prList.data.length,
-                    prList: prList.data
+                    nextHeadPRs
                 });
-                if (prList.data.length !== 1) {
+                if (nextHeadPRs.length !== 1) {
                     throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base.ref} or we found more than one`);
                 }
-                const pr = prList.data[0];
+                const pr = nextHeadPRs[0];
                 const commits = yield octokit.rest.pulls.listCommits({
                     owner,
                     repo,
