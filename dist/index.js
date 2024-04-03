@@ -30487,8 +30487,8 @@ function getCombinedSuccess(octokit_1, _a) {
             repo,
             pull_number
         });
+        console.log('getCombinedSuccess', result);
         const [{ commit: lastCommit }] = result.repository.pullRequest.commits.nodes;
-        console.log('getCombinedSuccess', lastCommit.statusCheckRollup);
         return lastCommit.statusCheckRollup.state === 'SUCCESS';
     });
 }
