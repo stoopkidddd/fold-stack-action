@@ -50,7 +50,7 @@ export async function main() {
       pull_number
     })
 
-    console.log('currentPR', currentPR)
+    console.log('currentPR', currentPR.data)
 
     const descendantPRs = []
     let nextPR = currentPR
@@ -60,14 +60,18 @@ export async function main() {
       const prList = await octokit.rest.pulls.list({
         owner,
         repo,
-        head: nextPR.data.base
+        base: nextPR.data.base.ref
       })
 
-      console.log('prList', prList)
+      console.log('prList', {
+        base: nextPR.data.base.ref,
+        prListLength: prList.length,
+        prList: prList.data
+      })
 
       if (prList.data.length !== 1) {
         throw new Error(
-          `The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base} or we found more than one`
+          `The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base.ref} or we found more than one`
         )
       }
 
