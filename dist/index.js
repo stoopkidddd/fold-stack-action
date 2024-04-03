@@ -30437,8 +30437,6 @@ legacyRestEndpointMethods.VERSION = dist_src_version_VERSION;
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(2186);
-;// CONCATENATED MODULE: external "child_process"
-const external_child_process_namespaceObject = require("child_process");
 ;// CONCATENATED MODULE: ./src/main.ts
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -30455,22 +30453,18 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-
+// import { execSync } from 'child_process'
 // import { createActionAuth } from '../node_modules/@octokit/auth-action'
-function findOpenPRs(octokit, commitSHA) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { data: issues } = yield octokit.search.issuesAndPullRequests({
-            q: `is:open is:pr ${commitSHA}`
-        });
-        return issues.items.filter(issue => issue.pull_request);
-    });
-}
-function getTargetBranch(octokit, prURL) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const pr = yield octokit.request(prURL);
-        return pr.data.base.ref;
-    });
-}
+// async function findOpenPRs(octokit, commitSHA) {
+//   const { data: issues } = await octokit.search.issuesAndPullRequests({
+//     q: `is:open is:pr ${commitSHA}`
+//   })
+//   return issues.items.filter(issue => issue.pull_request)
+// }
+// async function getTargetBranch(octokit, prURL) {
+//   const pr = await octokit.request(prURL)
+//   return pr.data.base.ref
+// }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c;
@@ -30485,40 +30479,70 @@ function main() {
                 auth: process.env.PAT_TOKEN
                 // baseUrl: process.env.GITHUB_API_URL
             });
-            const pull_number = (_b = (_a = process.env.GITHUB_REF_NAME) === null || _a === void 0 ? void 0 : _a.split('/')) === null || _b === void 0 ? void 0 : _b[0];
+            const ownerAndRepo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split('/');
+            const owner = ownerAndRepo[0];
+            const repo = ownerAndRepo[1];
+            const pull_number = (_c = (_b = process.env.GITHUB_REF_NAME) === null || _b === void 0 ? void 0 : _b.split('/')) === null || _c === void 0 ? void 0 : _c[0];
             // get current PR
             console.log('pull_number', pull_number);
-            const ownerAndRepo = (_c = process.env.GITHUB_REPOSITORY) === null || _c === void 0 ? void 0 : _c.split('/');
             const currentPR = yield octokit.rest.pulls.get({
-                owner: ownerAndRepo[0],
-                repo: ownerAndRepo[1],
+                owner,
+                repo,
                 pull_number
             });
             console.log('currentPR', currentPR);
-            const commitSHA = process.env.GITHUB_SHA;
-            const openPRs = yield findOpenPRs(octokit, commitSHA);
-            if (openPRs.length === 0) {
-                core.info('No open PRs found.');
-                return;
+            const descendantPRs = [];
+            let nextPR = currentPR;
+            // TODO: can we find trunk branch from envars?
+            while (nextPR.data.base.ref !== 'develop') {
+                const prList = yield octokit.rest.pulls.list({
+                    owner,
+                    repo,
+                    head: nextPR.data.base
+                });
+                console.log('prList', prList);
+                if (prList.data.length !== 1) {
+                    throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base} or we found more than one`);
+                }
+                const pr = prList.data[0];
+                const commits = yield octokit.rest.pulls.listCommits({
+                    owner,
+                    repo,
+                    pull_number: pr.number
+                });
+                console.log('commits', commits);
+                if (commits.data.length > 1) {
+                    throw new Error(`PR #${pr.number} has more than one commit`);
+                }
+                descendantPRs.push(pr);
+                nextPR = pr;
             }
-            const pr = openPRs[0];
-            const targetBranch = yield getTargetBranch(octokit, pr.pull_request.url);
-            console.log('targetBranch', targetBranch);
-            if (targetBranch === 'develop') {
-                core.info("Final PR found targeting 'develop'. Rebase and merge...");
-                (0,external_child_process_namespaceObject.execSync)(`git fetch origin ${pr.head.ref}`);
-                (0,external_child_process_namespaceObject.execSync)(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`);
-                (0,external_child_process_namespaceObject.execSync)(`git rebase origin/develop`);
-                (0,external_child_process_namespaceObject.execSync)(`git push origin pr-${pr.number}-branch:refs/heads/develop`);
-                (0,external_child_process_namespaceObject.execSync)(`gh pr merge --squash --delete-branch --auto -m "Rebased and merged PR into develop" ${pr.number}`);
-            }
-            else {
-                core.info("Target branch is not 'develop'. Merging...");
-                (0,external_child_process_namespaceObject.execSync)(`git fetch origin ${pr.head.ref}`);
-                (0,external_child_process_namespaceObject.execSync)(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`);
-                (0,external_child_process_namespaceObject.execSync)(`git merge --no-ff --no-edit ${commitSHA}`);
-                (0,external_child_process_namespaceObject.execSync)(`git push origin pr-${pr.number}-branch:${targetBranch}`);
-            }
+            console.log('somehow we got out?', descendantPRs);
+            // const commitSHA = process.env.GITHUB_SHA
+            // const openPRs = await findOpenPRs(octokit, commitSHA)
+            // if (openPRs.length === 0) {
+            //   core.info('No open PRs found.')
+            //   return
+            // }
+            // const pr = openPRs[0]
+            // const targetBranch = await getTargetBranch(octokit, pr.pull_request.url)
+            // console.log('targetBranch', targetBranch)
+            // if (targetBranch === 'develop') {
+            //   core.info("Final PR found targeting 'develop'. Rebase and merge...")
+            //   execSync(`git fetch origin ${pr.head.ref}`)
+            //   execSync(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`)
+            //   execSync(`git rebase origin/develop`)
+            //   execSync(`git push origin pr-${pr.number}-branch:refs/heads/develop`)
+            //   execSync(
+            //     `gh pr merge --squash --delete-branch --auto -m "Rebased and merged PR into develop" ${pr.number}`
+            //   )
+            // } else {
+            //   core.info("Target branch is not 'develop'. Merging...")
+            //   execSync(`git fetch origin ${pr.head.ref}`)
+            //   execSync(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`)
+            //   execSync(`git merge --no-ff --no-edit ${commitSHA}`)
+            //   execSync(`git push origin pr-${pr.number}-branch:${targetBranch}`)
+            // }
         }
         catch (error) {
             core.setFailed(error.message);
