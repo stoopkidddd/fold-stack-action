@@ -30489,7 +30489,8 @@ function getCombinedSuccess(octokit_1, _a) {
         });
         console.log('getCombinedSuccess', result.repository.pullRequest.commits.nodes);
         const [{ commit: lastCommit }] = result.repository.pullRequest.commits.nodes;
-        return lastCommit.statusCheckRollup.state === 'SUCCESS';
+        return (!lastCommit.statusCheckRollup ||
+            lastCommit.statusCheckRollup.state === 'SUCCESS');
     });
 }
 function main() {
