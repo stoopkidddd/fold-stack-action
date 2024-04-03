@@ -30468,15 +30468,17 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c;
-        console.log('are we in main?');
-        core.info('did we make it to main, core');
         try {
             // const auth = createActionAuth()
             // const authentication = await auth()
+            const trunkBranch = process.env.TRUNK_BRANCH;
+            if (!trunkBranch) {
+                throw new Error('You need to specificy TRUNK_BRANCH');
+            }
             const MyOctokit = Octokit.plugin(restEndpointMethods);
             console.log('we got past auth');
             const octokit = new MyOctokit({
-                auth: process.env.PAT_TOKEN
+                auth: process.env.GITHUB_TOKEN
                 // baseUrl: process.env.GITHUB_API_URL
             });
             const ownerAndRepo = (_a = process.env.GITHUB_REPOSITORY) === null || _a === void 0 ? void 0 : _a.split('/');
@@ -30501,7 +30503,7 @@ function main() {
                 // head: nextPR.data.base.ref
             });
             // TODO: can we find trunk branch from envars?
-            while (nextPR.data.base.ref !== 'develop') {
+            while (nextPR.data.base.ref !== process.env.TRUNK_BRANCH) {
                 const nextHead = nextPR.data.base.ref;
                 const nextHeadPRs = allOpenPRs.data.filter(pr => pr.base.ref === nextHead);
                 console.log('prList', {
