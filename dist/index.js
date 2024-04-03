@@ -30467,7 +30467,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 // }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         try {
             // const auth = createActionAuth()
             // const authentication = await auth()
@@ -30527,7 +30527,8 @@ function main() {
                 descendantPRs.push(pr);
                 nextPR = pr;
                 console.log('idk we are desperate', {
-                    base: nextPR.data.base.ref,
+                    base: (_j = (_h = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _h === void 0 ? void 0 : _h.base) === null || _j === void 0 ? void 0 : _j.ref,
+                    pr,
                     descendantPRs,
                     nextPR
                 });
