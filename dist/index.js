@@ -30493,15 +30493,16 @@ function main() {
             // console.log('currentPR', currentPR.data)
             const descendantPRs = [];
             let nextPR = currentPR;
+            console.log('envvars', process.env);
             // TODO: can we find trunk branch from envars?
             while (nextPR.data.base.ref !== 'develop') {
                 const prList = yield octokit.rest.pulls.list({
                     owner,
                     repo,
-                    base: nextPR.data.head.ref
+                    head: nextPR.data.base.ref
                 });
                 console.log('prList', {
-                    head: nextPR.data.head.ref,
+                    nextHead: nextPR.data.base.ref,
                     prListLength: prList.data.length,
                     prList: prList.data
                 });
