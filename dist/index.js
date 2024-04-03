@@ -30507,7 +30507,7 @@ function main() {
                 console.log('attempting nextHead', nextHead);
                 const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead);
                 console.log('prList', {
-                    nextHead: nextPR.data.base.ref,
+                    nextHead: nextPR.base.ref,
                     nextHeadPRs,
                     allOpenPRs
                 });
