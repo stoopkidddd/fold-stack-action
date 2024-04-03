@@ -105,7 +105,8 @@ export async function main() {
       nextPR = pr
 
       console.log('idk we are desperate', {
-        base: nextPR.data.base.ref,
+        base: nextPR?.data?.base?.ref,
+        pr,
         descendantPRs,
         nextPR
       })
