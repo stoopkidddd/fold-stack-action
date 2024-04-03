@@ -30490,7 +30490,7 @@ function main() {
                 repo,
                 pull_number
             });
-            console.log('currentPR', currentPR);
+            console.log('currentPR', currentPR.data);
             const descendantPRs = [];
             let nextPR = currentPR;
             // TODO: can we find trunk branch from envars?
@@ -30498,11 +30498,15 @@ function main() {
                 const prList = yield octokit.rest.pulls.list({
                     owner,
                     repo,
-                    head: nextPR.data.base
+                    base: nextPR.data.base.ref
                 });
-                console.log('prList', prList);
+                console.log('prList', {
+                    base: nextPR.data.base.ref,
+                    prListLength: prList.length,
+                    prList: prList.data
+                });
                 if (prList.data.length !== 1) {
-                    throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base} or we found more than one`);
+                    throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base.ref} or we found more than one`);
                 }
                 const pr = prList.data[0];
                 const commits = yield octokit.rest.pulls.listCommits({
