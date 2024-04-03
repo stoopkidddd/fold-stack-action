@@ -21,6 +21,36 @@ import * as core from '@actions/core'
 //   return pr.data.base.ref
 // }
 
+const statusCheckRollupQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
+  repository(owner: $owner, name:$repo) {
+    pullRequest(number:$pull_number) {
+      commits(last: 1) {
+        nodes {
+          commit {
+            statusCheckRollup {
+              state
+            }
+          }
+        }
+      }
+    }
+  }
+}`
+
+async function getCombinedSuccess(
+  octokit: Octokit,
+  { owner, repo, pull_number }
+) {
+  const result = await octokit.graphql(statusCheckRollupQuery, {
+    owner,
+    repo,
+    pull_number
+  })
+  const [{ commit: lastCommit }] = result.repository.pullRequest.commits.nodes
+  console.log('getCombinedSuccess', lastCommit.statusCheckRollup)
+  return lastCommit.statusCheckRollup.state === 'SUCCESS'
+}
+
 export async function main() {
   try {
     // const auth = createActionAuth()
@@ -54,9 +84,7 @@ export async function main() {
       pull_number
     })
 
-    // console.log('currentPR', currentPR.data)
-
-    const descendantPRs = []
+    const descendantPRs = [currentPR.data]
     let nextPR = currentPR.data
 
     console.log('envvars', process.env)
@@ -65,20 +93,14 @@ export async function main() {
       owner,
       repo,
       state: 'open'
-      // head: nextPR.data.base.ref
     })
 
-    while (nextPR?.base?.ref !== process.env.TRUNK_BRANCH) {
+    while (nextPR.base.ref !== process.env.TRUNK_BRANCH) {
       const nextHead = nextPR?.base?.ref
 
       console.log('attempting nextHead', nextHead)
 
       const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead)
-      console.log('prList', {
-        nextHead: nextPR.base.ref,
-        nextHeadPRs,
-        allOpenPRs
-      })
 
       if (nextHeadPRs.length !== 1) {
         throw new Error(
@@ -100,16 +122,19 @@ export async function main() {
         throw new Error(`PR #${pr.number} has more than one commit`)
       }
 
-      descendantPRs.push(pr)
+      const status = await getCombinedSuccess(octokit, {
+        owner,
+        repo,
+        pull_number: pr.number
+      })
+
+      console.log('we got a status!', status)
+
+      if (pr.base.ref !== trunkBranch) {
+        descendantPRs.push(pr)
+      }
 
       nextPR = pr
-
-      console.log('idk we are desperate', {
-        base: nextPR?.base?.ref,
-        pr,
-        descendantPRs,
-        nextPR
-      })
     }
 
     console.log('somehow we got out?', descendantPRs)

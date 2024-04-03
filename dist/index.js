@@ -30465,9 +30465,36 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 //   const pr = await octokit.request(prURL)
 //   return pr.data.base.ref
 // }
+const statusCheckRollupQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
+  repository(owner: $owner, name:$repo) {
+    pullRequest(number:$pull_number) {
+      commits(last: 1) {
+        nodes {
+          commit {
+            statusCheckRollup {
+              state
+            }
+          }
+        }
+      }
+    }
+  }
+}`;
+function getCombinedSuccess(octokit_1, _a) {
+    return __awaiter(this, arguments, void 0, function* (octokit, { owner, repo, pull_number }) {
+        const result = yield octokit.graphql(statusCheckRollupQuery, {
+            owner,
+            repo,
+            pull_number
+        });
+        const [{ commit: lastCommit }] = result.repository.pullRequest.commits.nodes;
+        console.log('getCombinedSuccess', lastCommit.statusCheckRollup);
+        return lastCommit.statusCheckRollup.state === 'SUCCESS';
+    });
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d;
         try {
             // const auth = createActionAuth()
             // const authentication = await auth()
@@ -30492,25 +30519,18 @@ function main() {
                 repo,
                 pull_number
             });
-            // console.log('currentPR', currentPR.data)
-            const descendantPRs = [];
+            const descendantPRs = [currentPR.data];
             let nextPR = currentPR.data;
             console.log('envvars', process.env);
             const allOpenPRs = yield octokit.rest.pulls.list({
                 owner,
                 repo,
                 state: 'open'
-                // head: nextPR.data.base.ref
             });
-            while (((_d = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _d === void 0 ? void 0 : _d.ref) !== process.env.TRUNK_BRANCH) {
-                const nextHead = (_e = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _e === void 0 ? void 0 : _e.ref;
+            while (nextPR.base.ref !== process.env.TRUNK_BRANCH) {
+                const nextHead = (_d = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _d === void 0 ? void 0 : _d.ref;
                 console.log('attempting nextHead', nextHead);
                 const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead);
-                console.log('prList', {
-                    nextHead: nextPR.base.ref,
-                    nextHeadPRs,
-                    allOpenPRs
-                });
                 if (nextHeadPRs.length !== 1) {
                     throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base.ref} or we found more than one`);
                 }
@@ -30524,14 +30544,16 @@ function main() {
                 if (commits.data.length > 1) {
                     throw new Error(`PR #${pr.number} has more than one commit`);
                 }
-                descendantPRs.push(pr);
-                nextPR = pr;
-                console.log('idk we are desperate', {
-                    base: (_f = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _f === void 0 ? void 0 : _f.ref,
-                    pr,
-                    descendantPRs,
-                    nextPR
+                const status = yield getCombinedSuccess(octokit, {
+                    owner,
+                    repo,
+                    pull_number: pr.number
                 });
+                console.log('we got a status!', status);
+                if (pr.base.ref !== trunkBranch) {
+                    descendantPRs.push(pr);
+                }
+                nextPR = pr;
             }
             console.log('somehow we got out?', descendantPRs);
             // const commitSHA = process.env.GITHUB_SHA
