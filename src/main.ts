@@ -57,7 +57,7 @@ export async function main() {
     // console.log('currentPR', currentPR.data)
 
     const descendantPRs = []
-    let nextPR = currentPR
+    let nextPR = currentPR.data
 
     console.log('envvars', process.env)
 
@@ -68,9 +68,8 @@ export async function main() {
       // head: nextPR.data.base.ref
     })
 
-    // TODO: can we find trunk branch from envars?
-    while (nextPR?.data?.base?.ref !== process.env.TRUNK_BRANCH) {
-      const nextHead = nextPR?.data?.base?.ref
+    while (nextPR?.base?.ref !== process.env.TRUNK_BRANCH) {
+      const nextHead = nextPR?.base?.ref
 
       console.log('attempting nextHead', nextHead)
 
@@ -106,7 +105,7 @@ export async function main() {
       nextPR = pr
 
       console.log('idk we are desperate', {
-        base: nextPR?.data?.base?.ref,
+        base: nextPR?.base?.ref,
         pr,
         descendantPRs,
         nextPR

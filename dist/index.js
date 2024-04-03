@@ -30467,7 +30467,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 // }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f;
         try {
             // const auth = createActionAuth()
             // const authentication = await auth()
@@ -30494,7 +30494,7 @@ function main() {
             });
             // console.log('currentPR', currentPR.data)
             const descendantPRs = [];
-            let nextPR = currentPR;
+            let nextPR = currentPR.data;
             console.log('envvars', process.env);
             const allOpenPRs = yield octokit.rest.pulls.list({
                 owner,
@@ -30502,9 +30502,8 @@ function main() {
                 state: 'open'
                 // head: nextPR.data.base.ref
             });
-            // TODO: can we find trunk branch from envars?
-            while (((_e = (_d = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _d === void 0 ? void 0 : _d.base) === null || _e === void 0 ? void 0 : _e.ref) !== process.env.TRUNK_BRANCH) {
-                const nextHead = (_g = (_f = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _f === void 0 ? void 0 : _f.base) === null || _g === void 0 ? void 0 : _g.ref;
+            while (((_d = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _d === void 0 ? void 0 : _d.ref) !== process.env.TRUNK_BRANCH) {
+                const nextHead = (_e = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _e === void 0 ? void 0 : _e.ref;
                 console.log('attempting nextHead', nextHead);
                 const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead);
                 console.log('prList', {
@@ -30528,7 +30527,7 @@ function main() {
                 descendantPRs.push(pr);
                 nextPR = pr;
                 console.log('idk we are desperate', {
-                    base: (_j = (_h = nextPR === null || nextPR === void 0 ? void 0 : nextPR.data) === null || _h === void 0 ? void 0 : _h.base) === null || _j === void 0 ? void 0 : _j.ref,
+                    base: (_f = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _f === void 0 ? void 0 : _f.ref,
                     pr,
                     descendantPRs,
                     nextPR
