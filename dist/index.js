@@ -32293,7 +32293,7 @@ function main() {
                 repo,
                 state: 'open'
             });
-            const currentPR = allOpenPRs.data.filter(pr => (pr.number = pull_number));
+            const currentPR = allOpenPRs.data.filter(pr => pr.number === pull_number);
             const descendantPRs = [currentPR[0]];
             let nextPR = currentPR[0];
             let finalPR;
