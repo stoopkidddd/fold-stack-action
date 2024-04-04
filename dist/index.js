@@ -32286,11 +32286,16 @@ function main() {
                     throw new Error(`PR #${pr.number} has more than one commit`);
                 }
                 // TODO: verify that commit has linear ticket??
-                const status = yield getCombinedSuccess(octokit, {
-                    owner,
-                    repo,
-                    pull_number: pr.number
-                });
+                // Workaround: this job ends up being PENDING, so it "fails" merge check.
+                // For now, we skip merge check on current PR.
+                // I think we can use status connection/edge from GQL to look at each status check and ignore this job specifically
+                const status = currentPR[0].id !== nextPR.id
+                    ? yield getCombinedSuccess(octokit, {
+                        owner,
+                        repo,
+                        pull_number: pr.number
+                    })
+                    : true;
                 if (!status) {
                     throw new Error(`PR # ${pr.number} has failing merge checks`);
                 }
