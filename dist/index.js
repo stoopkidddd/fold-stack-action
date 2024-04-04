@@ -32180,7 +32180,7 @@ throttling.triggersNotification = triggersNotification;
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(2186);
-;// CONCATENATED MODULE: ./src/main.ts
+;// CONCATENATED MODULE: ./src/wait.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -32190,6 +32190,33 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+/**
+ * Wait for a number of milliseconds.
+ * @param milliseconds The number of milliseconds to wait.
+ * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
+ */
+function wait(milliseconds) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => {
+            if (isNaN(milliseconds)) {
+                throw new Error('milliseconds not a number');
+            }
+            setTimeout(() => resolve('done!'), milliseconds);
+        });
+    });
+}
+
+;// CONCATENATED MODULE: ./src/main.ts
+var main_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
 
 
 
@@ -32210,7 +32237,7 @@ const statusCheckRollupQuery = `query($owner: String!, $repo: String!, $pull_num
   }
 }`;
 function getCombinedSuccess(octokit_1, _a) {
-    return __awaiter(this, arguments, void 0, function* (octokit, { owner, repo, pull_number }) {
+    return main_awaiter(this, arguments, void 0, function* (octokit, { owner, repo, pull_number }) {
         const result = yield octokit.graphql(statusCheckRollupQuery, {
             owner,
             repo,
@@ -32226,7 +32253,7 @@ function getCombinedSuccess(octokit_1, _a) {
     });
 }
 function main() {
-    return __awaiter(this, void 0, void 0, function* () {
+    return main_awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
             const trunkBranch = core.getInput('TRUNK_BRANCH', { required: true });
@@ -32329,6 +32356,7 @@ function main() {
                 });
                 previousMergeSha = mergeResponse.data.sha;
                 console.log('mergeResponse', mergeResponse);
+                wait(5000);
                 // we merged, now update next unless we are the last one
                 if (i + 1 < descendantPRs.length) {
                     // await octokit.rest.pulls.updateBranch({
@@ -32342,7 +32370,13 @@ function main() {
                         repo,
                         pull_number: descendantPRs[i + 1].number
                     });
-                    console.log('idk getting new PR', x);
+                    console.log('idk getting new PR', {
+                        index: i,
+                        index1: i + 1,
+                        descendantPRs,
+                        descendantPR: descendantPRs[i + 1],
+                        x
+                    });
                 }
             }
             yield octokit.rest.issues.addLabels({

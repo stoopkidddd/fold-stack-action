@@ -2,6 +2,7 @@ import { Octokit } from '@octokit/core'
 import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
 import { throttling } from '@octokit/plugin-throttling'
 import * as core from '@actions/core'
+import { wait } from './wait'
 
 const statusCheckRollupQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
   repository(owner: $owner, name:$repo) {
@@ -180,6 +181,8 @@ export async function main() {
 
       console.log('mergeResponse', mergeResponse)
 
+      wait(5000)
+
       // we merged, now update next unless we are the last one
       if (i + 1 < descendantPRs.length) {
         // await octokit.rest.pulls.updateBranch({
@@ -194,7 +197,13 @@ export async function main() {
           repo,
           pull_number: descendantPRs[i + 1].number
         })
-        console.log('idk getting new PR', x)
+        console.log('idk getting new PR', {
+          index: i,
+          index1: i + 1,
+          descendantPRs,
+          descendantPR: descendantPRs[i + 1],
+          x
+        })
       }
     }
 
