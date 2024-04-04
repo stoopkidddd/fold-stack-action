@@ -3,9 +3,7 @@ on:
     types: [labeled]
 
 permissions:
-  contents:
-    - write
-    - read
+  contents: write
 
 jobs:
   fold_me_job:
