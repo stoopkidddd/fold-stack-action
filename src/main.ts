@@ -164,19 +164,22 @@ export async function main() {
     for (let i = 0; i < descendantPRs.length; i++) {
       const pr = descendantPRs[i]
       console.log(`we are about to merge pr ${pr.number} - ${pr.title}`, pr)
-      await octokit.rest.pulls.merge({
+      const mergeResponse = await octokit.rest.pulls.merge({
         owner,
         repo,
         pull_number: pr.number,
         merge_method: 'rebase'
       })
 
+      console.log('mergeResponse', mergeResponse)
+
       // we merged, now update next unless we are the last one
       if (i + 1 < descendantPRs.length) {
         await octokit.rest.pulls.updateBranch({
           owner,
           repo,
-          pull_number: descendantPRs[i + 1].number
+          pull_number: descendantPRs[i + 1].number,
+          expected_head_sha: mergeResponse.data.sha
         })
       }
     }
