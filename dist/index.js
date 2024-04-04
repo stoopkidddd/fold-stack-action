@@ -32229,7 +32229,7 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
-            const trunkBranch = process.env.TRUNK_BRANCH;
+            const trunkBranch = core.getInput('TRUNK_BRANCH', { required: true });
             if (!trunkBranch) {
                 throw new Error('You need to specificy TRUNK_BRANCH');
             }

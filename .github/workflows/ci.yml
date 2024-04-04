@@ -58,6 +58,8 @@ jobs:
         uses: ./
         with:
           TRUNK_BRANCH: main
+        env:
+          TRUNK_BRANCH: main
 
       - name: Print Output
         id: output

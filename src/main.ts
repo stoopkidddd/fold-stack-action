@@ -45,7 +45,7 @@ async function getCombinedSuccess(
 
 export async function main() {
   try {
-    const trunkBranch = process.env.TRUNK_BRANCH
+    const trunkBranch = core.getInput('TRUNK_BRANCH', { required: true })
 
     if (!trunkBranch) {
       throw new Error('You need to specificy TRUNK_BRANCH')
