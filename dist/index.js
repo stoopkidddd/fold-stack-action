@@ -32314,13 +32314,24 @@ function main() {
             if (!finalPR) {
                 throw new Error('We left without a final PR');
             }
-            for (const pr of descendantPRs) {
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
+            for (let i = 0; i < descendantPRs.length; i++) {
+                const pr = descendantPRs[i];
+                console.log(`we are about to merge pr ${pr.number} - ${pr.title}`, pr);
                 yield octokit.rest.pulls.merge({
                     owner,
                     repo,
                     pull_number: pr.number,
                     merge_method: 'rebase'
                 });
+                // we merged, now update next unless we are the last one
+                if (i + 1 < descendantPRs.length) {
+                    yield octokit.rest.pulls.updateBranch({
+                        owner,
+                        repo,
+                        pull_number: descendantPRs[pr.number + 1].number
+                    });
+                }
             }
             yield octokit.rest.issues.addLabels({
                 owner,
