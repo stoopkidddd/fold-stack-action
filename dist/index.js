@@ -32330,14 +32330,20 @@ function main() {
                 previousMergeSha = mergeResponse.data.sha;
                 console.log('mergeResponse', mergeResponse);
                 // we merged, now update next unless we are the last one
-                // if (i + 1 < descendantPRs.length) {
-                //   await octokit.rest.pulls.updateBranch({
-                //     owner,
-                //     repo,
-                //     pull_number: descendantPRs[i + 1].number,
-                //     expected_head_sha: mergeResponse.data.sha
-                //   })
-                // }
+                if (i + 1 < descendantPRs.length) {
+                    // await octokit.rest.pulls.updateBranch({
+                    //   owner,
+                    //   repo,
+                    //   pull_number: descendantPRs[i + 1].number,
+                    //   expected_head_sha: mergeResponse.data.sha
+                    // })
+                    const x = yield octokit.rest.pulls.get({
+                        owner,
+                        repo,
+                        pull_number: descendantPRs[i + 1].number
+                    });
+                    console.log('idk getting new PR', x);
+                }
             }
             yield octokit.rest.issues.addLabels({
                 owner,
