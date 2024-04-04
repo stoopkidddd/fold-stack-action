@@ -9,6 +9,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "noImplicitAny": true,
+    "noImplicitReturns": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
