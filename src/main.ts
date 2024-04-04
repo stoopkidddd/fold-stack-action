@@ -154,7 +154,8 @@ export async function main() {
       await octokit.rest.pulls.merge({
         owner,
         repo,
-        pull_number: pr.number
+        pull_number: pr.number,
+        merge_method: 'rebase'
       })
     }
 

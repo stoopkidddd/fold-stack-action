@@ -32309,7 +32309,8 @@ function main() {
                 yield octokit.rest.pulls.merge({
                     owner,
                     repo,
-                    pull_number: pr.number
+                    pull_number: pr.number,
+                    merge_method: 'rebase'
                 });
             }
             yield octokit.rest.issues.addLabels({
