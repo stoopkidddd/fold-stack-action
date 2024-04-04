@@ -32181,9 +32181,6 @@ throttling.triggersNotification = triggersNotification;
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(2186);
 ;// CONCATENATED MODULE: ./src/main.ts
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -32219,6 +32216,7 @@ function getCombinedSuccess(octokit_1, _a) {
             repo,
             pull_number
         });
+        // @ts-expect-error Need to codegen GQL return. Can't find rest api equivalent?
         const [{ commit: lastCommit }] = result.repository.pullRequest.commits.nodes;
         console.log('getCombinedSuccess', {
             statusCheckRollup: lastCommit === null || lastCommit === void 0 ? void 0 : lastCommit.statusCheckRollup
@@ -32229,7 +32227,7 @@ function getCombinedSuccess(octokit_1, _a) {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c;
+        var _a;
         try {
             const trunkBranch = process.env.TRUNK_BRANCH;
             if (!trunkBranch) {
@@ -32254,28 +32252,29 @@ function main() {
                     }
                 }
             });
+            if (!process.env.GITHUB_REPOSITORY) {
+                throw new Error('GITHUB_REPOSITORY env var missing?');
+            }
             const ownerAndRepo = process.env.GITHUB_REPOSITORY.split('/');
             const [owner, repo] = ownerAndRepo;
-            const pull_number = (_b = (_a = process.env.GITHUB_REF_NAME) === null || _a === void 0 ? void 0 : _a.split('/')) === null || _b === void 0 ? void 0 : _b[0];
-            core.info('pull_number', pull_number);
-            const currentPR = yield octokit.rest.pulls.get({
-                owner,
-                repo,
-                pull_number
-            });
-            const descendantPRs = [currentPR.data];
-            let nextPR = currentPR.data;
-            let finalPR;
+            if (!process.env.GITHUB_REF_NAME) {
+                throw new Error('GITHUB_REF_NAME env var missing?');
+            }
+            const pull_number = parseInt(process.env.GITHUB_REF_NAME.split('/')[0]);
             const allOpenPRs = yield octokit.rest.pulls.list({
                 owner,
                 repo,
                 state: 'open'
             });
+            const currentPR = allOpenPRs.data.filter(pr => (pr.number = pull_number));
+            const descendantPRs = [currentPR[0]];
+            let nextPR = currentPR[0];
+            let finalPR;
             while (nextPR.base.ref !== trunkBranch) {
-                const nextHead = (_c = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _c === void 0 ? void 0 : _c.ref;
+                const nextHead = (_a = nextPR === null || nextPR === void 0 ? void 0 : nextPR.base) === null || _a === void 0 ? void 0 : _a.ref;
                 const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead);
                 if (nextHeadPRs.length !== 1) {
-                    throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.data.base.ref} or we found more than one`);
+                    throw new Error(`The chain of PRs is broken because we could not find a PR with the specified base ${nextPR.base.ref} or we found more than one`);
                 }
                 const pr = nextHeadPRs[0];
                 const commits = yield octokit.rest.pulls.listCommits({
@@ -32303,6 +32302,9 @@ function main() {
                 }
                 nextPR = pr;
             }
+            if (!finalPR) {
+                throw new Error('We left without a final PR');
+            }
             for (const pr of descendantPRs) {
                 yield octokit.rest.pulls.merge({
                     owner,
@@ -32318,6 +32320,7 @@ function main() {
             });
         }
         catch (error) {
+            // @ts-expect-error unknown errors
             core.setFailed(error.message);
         }
     });
