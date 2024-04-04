@@ -130,8 +130,12 @@ export async function main() {
       // Workaround: this job ends up being PENDING, so it "fails" merge check.
       // For now, we skip merge check on current PR.
       // I think we can use status connection/edge from GQL to look at each status check and ignore this job specifically
+      console.log('status check incoming', {
+        currentPR: currentPR[0].number,
+        nextPR: nextPR.number
+      })
       const status =
-        currentPR[0].id !== nextPR.id
+        currentPR[0].number !== nextPR.number
           ? await getCombinedSuccess(octokit, {
               owner,
               repo,
