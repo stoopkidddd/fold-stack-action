@@ -32314,16 +32314,20 @@ function main() {
             if (!finalPR) {
                 throw new Error('We left without a final PR');
             }
+            let previousMergeSha = undefined;
             // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let i = 0; i < descendantPRs.length; i++) {
                 const pr = descendantPRs[i];
                 console.log(`we are about to merge pr ${pr.number} - ${pr.title}`, pr);
+                // ts-expect-error no type
                 const mergeResponse = yield octokit.rest.pulls.merge({
                     owner,
                     repo,
                     pull_number: pr.number,
-                    merge_method: 'rebase'
+                    merge_method: 'rebase',
+                    sha: previousMergeSha
                 });
+                previousMergeSha = mergeResponse.data.sha;
                 console.log('mergeResponse', mergeResponse);
                 // we merged, now update next unless we are the last one
                 // if (i + 1 < descendantPRs.length) {
