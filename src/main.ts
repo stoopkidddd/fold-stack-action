@@ -4,22 +4,8 @@
 
 import { Octokit } from '@octokit/core'
 import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
+import { throttling } from '@octokit/plugin-throttling'
 import * as core from '@actions/core'
-// import { execSync } from 'child_process'
-// import { createActionAuth } from '../node_modules/@octokit/auth-action'
-
-// async function findOpenPRs(octokit, commitSHA) {
-//   const { data: issues } = await octokit.search.issuesAndPullRequests({
-//     q: `is:open is:pr ${commitSHA}`
-//   })
-
-//   return issues.items.filter(issue => issue.pull_request)
-// }
-
-// async function getTargetBranch(octokit, prURL) {
-//   const pr = await octokit.request(prURL)
-//   return pr.data.base.ref
-// }
 
 const statusCheckRollupQuery = `query($owner: String!, $repo: String!, $pull_number: Int!) {
   repository(owner: $owner, name:$repo) {
@@ -46,8 +32,10 @@ async function getCombinedSuccess(
     repo,
     pull_number
   })
-  console.log('getCombinedSuccess', result.repository.pullRequest.commits.nodes)
   const [{ commit: lastCommit }] = result.repository.pullRequest.commits.nodes
+  console.log('getCombinedSuccess', {
+    statusCheckRollup: lastCommit?.statusCheckRollup
+  })
   return (
     !lastCommit.statusCheckRollup ||
     lastCommit.statusCheckRollup.state === 'SUCCESS'
@@ -56,30 +44,43 @@ async function getCombinedSuccess(
 
 export async function main() {
   try {
-    // const auth = createActionAuth()
-    // const authentication = await auth()
-
     const trunkBranch = process.env.TRUNK_BRANCH
 
     if (!trunkBranch) {
       throw new Error('You need to specificy TRUNK_BRANCH')
     }
 
-    const MyOctokit = Octokit.plugin(restEndpointMethods)
+    const MyOctokit = Octokit.plugin(restEndpointMethods, throttling)
 
     console.log('we got past auth')
     const octokit = new MyOctokit({
-      auth: process.env.GITHUB_TOKEN
-      // baseUrl: process.env.GITHUB_API_URL
+      auth: process.env.GITHUB_TOKEN,
+      throttle: {
+        onRateLimit: (retryAfter, options, octo, retryCount) => {
+          octo.log.warn(
+            `Request quota exhausted for request ${options.method} ${options.url}`
+          )
+
+          if (retryCount < 1) {
+            // only retries once
+            octo.log.info(`Retrying after ${retryAfter} seconds!`)
+            return true
+          }
+        },
+        onSecondaryRateLimit: (retryAfter, options, octo) => {
+          // does not retry, only logs a warning
+          octo.log.warn(
+            `SecondaryRateLimit detected for request ${options.method} ${options.url}`
+          )
+        }
+      }
     })
 
-    const ownerAndRepo = process.env.GITHUB_REPOSITORY?.split('/')
-    const owner = ownerAndRepo[0]
-    const repo = ownerAndRepo[1]
+    const ownerAndRepo = process.env.GITHUB_REPOSITORY.split('/')
+    const [owner, repo] = ownerAndRepo
 
     const pull_number = process.env.GITHUB_REF_NAME?.split('/')?.[0]
-    // get current PR
-    console.log('pull_number', pull_number)
+    core.info('pull_number', pull_number)
 
     const currentPR = await octokit.rest.pulls.get({
       owner,
@@ -89,8 +90,7 @@ export async function main() {
 
     const descendantPRs = [currentPR.data]
     let nextPR = currentPR.data
-
-    console.log('envvars', process.env)
+    let finalPR
 
     const allOpenPRs = await octokit.rest.pulls.list({
       owner,
@@ -98,10 +98,8 @@ export async function main() {
       state: 'open'
     })
 
-    while (nextPR.base.ref !== process.env.TRUNK_BRANCH) {
+    while (nextPR.base.ref !== trunkBranch) {
       const nextHead = nextPR?.base?.ref
-
-      console.log('attempting nextHead', nextHead)
 
       const nextHeadPRs = allOpenPRs.data.filter(pr => pr.head.ref === nextHead)
 
@@ -119,11 +117,11 @@ export async function main() {
         pull_number: pr.number
       })
 
-      console.log('commits', commits)
-
       if (commits.data.length > 1) {
         throw new Error(`PR #${pr.number} has more than one commit`)
       }
+
+      // TODO: verify that commit has linear ticket??
 
       const status = await getCombinedSuccess(octokit, {
         owner,
@@ -131,46 +129,33 @@ export async function main() {
         pull_number: pr.number
       })
 
-      console.log('we got a status!', status)
+      if (!status) {
+        throw new Error(`PR # ${pr.number} has failing merge checks`)
+      }
 
       if (pr.base.ref !== trunkBranch) {
         descendantPRs.push(pr)
+      } else {
+        finalPR = pr
       }
 
       nextPR = pr
     }
 
-    console.log('somehow we got out?', descendantPRs)
+    for (const pr of descendantPRs) {
+      await octokit.rest.pulls.merge({
+        owner,
+        repo,
+        pull_number: pr.number
+      })
+    }
 
-    // const commitSHA = process.env.GITHUB_SHA
-
-    // const openPRs = await findOpenPRs(octokit, commitSHA)
-    // if (openPRs.length === 0) {
-    //   core.info('No open PRs found.')
-    //   return
-    // }
-
-    // const pr = openPRs[0]
-    // const targetBranch = await getTargetBranch(octokit, pr.pull_request.url)
-
-    // console.log('targetBranch', targetBranch)
-
-    // if (targetBranch === 'develop') {
-    //   core.info("Final PR found targeting 'develop'. Rebase and merge...")
-    //   execSync(`git fetch origin ${pr.head.ref}`)
-    //   execSync(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`)
-    //   execSync(`git rebase origin/develop`)
-    //   execSync(`git push origin pr-${pr.number}-branch:refs/heads/develop`)
-    //   execSync(
-    //     `gh pr merge --squash --delete-branch --auto -m "Rebased and merged PR into develop" ${pr.number}`
-    //   )
-    // } else {
-    //   core.info("Target branch is not 'develop'. Merging...")
-    //   execSync(`git fetch origin ${pr.head.ref}`)
-    //   execSync(`git checkout -b pr-${pr.number}-branch FETCH_HEAD`)
-    //   execSync(`git merge --no-ff --no-edit ${commitSHA}`)
-    //   execSync(`git push origin pr-${pr.number}-branch:${targetBranch}`)
-    // }
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo,
+      issue_number: finalPR.number,
+      labels: ['merge-stack']
+    })
   } catch (error) {
     core.setFailed(error.message)
   }
