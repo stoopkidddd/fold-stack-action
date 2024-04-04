@@ -4,6 +4,7 @@ on:
 
 permissions:
   contents: write
+  pull_requests: write
 
 jobs:
   fold_me_job:
