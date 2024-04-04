@@ -176,7 +176,7 @@ export async function main() {
         await octokit.rest.pulls.updateBranch({
           owner,
           repo,
-          pull_number: descendantPRs[pr.number + 1].number
+          pull_number: descendantPRs[i + 1].number
         })
       }
     }
