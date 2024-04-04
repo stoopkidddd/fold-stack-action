@@ -57,7 +57,7 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          TRUNK_BRANCH: main
 
       - name: Print Output
         id: output
