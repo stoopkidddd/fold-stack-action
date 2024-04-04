@@ -174,14 +174,14 @@ export async function main() {
       console.log('mergeResponse', mergeResponse)
 
       // we merged, now update next unless we are the last one
-      if (i + 1 < descendantPRs.length) {
-        await octokit.rest.pulls.updateBranch({
-          owner,
-          repo,
-          pull_number: descendantPRs[i + 1].number,
-          expected_head_sha: mergeResponse.data.sha
-        })
-      }
+      // if (i + 1 < descendantPRs.length) {
+      //   await octokit.rest.pulls.updateBranch({
+      //     owner,
+      //     repo,
+      //     pull_number: descendantPRs[i + 1].number,
+      //     expected_head_sha: mergeResponse.data.sha
+      //   })
+      // }
     }
 
     await octokit.rest.issues.addLabels({
